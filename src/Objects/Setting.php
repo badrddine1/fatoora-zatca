@@ -24,6 +24,8 @@ class Setting
 
     public $egsSerialNumber;
 
+    public $registrationNumber;
+
     /**
      * the invoice type
      * 0100 for Simplified Tax Invoice|Simplified Debit Note|Simplified Credit Note
@@ -51,6 +53,7 @@ class Setting
         string $registeredAddress,
         string $businessCategory,
         string $egsSerialNumber = NULL,
+        string $registrationNumber,
         string $invoiceType = '1100',
         string $countryName = 'SA'
     )
@@ -64,6 +67,7 @@ class Setting
         $this->registeredAddress            = $registeredAddress;
         $this->businessCategory             = $businessCategory;
         $this->egsSerialNumber              = $egsSerialNumber ?? EgsSerialNumber::generate();
+        $this->registrationNumber           = $registrationNumber;
         $this->invoiceType                  = $invoiceType;
         $this->countryName                  = $countryName;
     }

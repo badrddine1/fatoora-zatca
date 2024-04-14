@@ -25,7 +25,20 @@ class Zatca
     }
 
     /**
-     * report standard invoice.
+     * report standard invoice compilance.
+     *
+     * @param  \Bl\FatooraZatca\Objects\Seller    $seller
+     * @param  \Bl\FatooraZatca\Objects\Invoice   $invoice
+     * @param  \Bl\FatooraZatca\Objects\Client    $client
+     * @return array
+     */
+    public static function reportStandardInvoiceCompliance(Seller $seller, Invoice $invoice, Client $client): array
+    {
+        return (new ReportInvoiceService($seller, $invoice, $client))->test(DocumentType::STANDARD);
+    }
+
+    /**
+     * report standard invoice production.
      *
      * @param  \Bl\FatooraZatca\Objects\Seller    $seller
      * @param  \Bl\FatooraZatca\Objects\Invoice   $invoice
@@ -34,16 +47,24 @@ class Zatca
      */
     public static function reportStandardInvoice(Seller $seller, Invoice $invoice, Client $client): array
     {
-        if(ConfigHelper::isProduction()) {
-            return (new ReportInvoiceService($seller, $invoice, $client))->clearance();
-        }
-        else {
-            return (new ReportInvoiceService($seller, $invoice, $client))->test(DocumentType::STANDARD);
-        }
+        return (new ReportInvoiceService($seller, $invoice, $client))->clearance();
     }
 
     /**
-     * report simplified invoice.
+     * report simplified invoice compliance.
+     *
+     * @param  \Bl\FatooraZatca\Objects\Seller    $seller
+     * @param  \Bl\FatooraZatca\Objects\Invoice   $invoice
+     * @param  \Bl\FatooraZatca\Objects\Client    $client
+     * @return array
+     */
+    public static function reportSimplifiedInvoiceCompliance(Seller $seller, Invoice $invoice, Client $client = null): array
+    {
+        return (new ReportInvoiceService($seller, $invoice, $client))->test(DocumentType::SIMPILIFIED);
+    }
+
+    /**
+     * report simplified invoice production.
      *
      * @param  \Bl\FatooraZatca\Objects\Seller    $seller
      * @param  \Bl\FatooraZatca\Objects\Invoice   $invoice
@@ -52,12 +73,7 @@ class Zatca
      */
     public static function reportSimplifiedInvoice(Seller $seller, Invoice $invoice, Client $client = null): array
     {
-        if(ConfigHelper::isProduction()) {
-            return (new ReportInvoiceService($seller, $invoice, $client))->reporting();
-        }
-        else {
-            return (new ReportInvoiceService($seller, $invoice, $client))->test(DocumentType::SIMPILIFIED);
-        }
+        return (new ReportInvoiceService($seller, $invoice, $client))->reporting();
     }
 
     /**

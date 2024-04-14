@@ -26,7 +26,7 @@ class HandleResponseAction
 
         }
         else {
-
+            dd($response);
             if(is_array($response) && array_key_exists('code', $response)) {
 
                 throw new Exception($response['message']);
@@ -34,7 +34,12 @@ class HandleResponseAction
             }
             else if(is_array($response) && array_key_exists('errors', $response)) {
 
-                throw new Exception($response['errors'][0]);
+                if(is_array($response) && array_key_exists('message', $response['errors'][0])) {
+                    throw new Exception($response['errors'][0]['message']);
+                }
+                else {
+                    throw new Exception($response['errors'][0]);
+                }
 
             }
             else if(is_array($response) && array_key_exists('validationResults', $response)) {

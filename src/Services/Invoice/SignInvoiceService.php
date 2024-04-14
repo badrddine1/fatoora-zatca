@@ -171,7 +171,7 @@ class SignInvoiceService
         $xml = str_replace('SET_CERTIFICATE_VALUE', base64_decode($this->seller->certificate), $xml);
 
         $xml = str_replace('SET_CERTIFICATE_SIGNED_PROPERTIES', $signedProperties, $xml);
-
+dd(rtrim($xml, "\n"));
         return rtrim($xml, "\n");
     }
 

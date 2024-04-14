@@ -4,16 +4,15 @@ namespace Bl\FatooraZatca\Services\Settings;
 
 use Bl\FatooraZatca\Actions\PostRequestAction;
 use Bl\FatooraZatca\Helpers\ConfigHelper;
+use Bl\FatooraZatca\Services\Compliants\SimplifiedCompliantService;
+use Bl\FatooraZatca\Services\Compliants\SimplifiedCreditNoteCompliantService;
+use Bl\FatooraZatca\Services\Compliants\SimplifiedDebitNoteCompliantService;
+use Bl\FatooraZatca\Services\Compliants\StandardCompliantService;
+use Bl\FatooraZatca\Services\Compliants\StandardCreditNoteCompliantService;
+use Bl\FatooraZatca\Services\Compliants\StandardDebitNoteCompliantService;
 
 class Cert509Service
 {
-    /**
-     * is in production mode.
-     *
-     * @var bool
-     */
-    protected $isProduction;
-
     /**
      * the data of a tax payer.
      *
@@ -41,18 +40,24 @@ class Cert509Service
      */
     public function generate(object &$settings): void
     {
-        $this->isProduction = ConfigHelper::isProduction();
+        $this->handleComplianceMode($settings);
 
-        if($this->isProduction) {
+        $privateKey     = $settings->private_key;
+        $certificate    = $settings->cert_compliance;
+        $secret         = $settings->secret_compliance;
 
-            $this->handleProductionMode($settings);
-
+        // Send the 6 test invoices for the production certificate...
+        if(ConfigHelper::isProduction()) {
+            StandardCompliantService::verify($this->data, $privateKey, $certificate, $secret);
+            StandardCreditNoteCompliantService::verify($this->data, $privateKey, $certificate, $secret);
+            StandardDebitNoteCompliantService::verify($this->data, $privateKey, $certificate, $secret);
+            SimplifiedCompliantService::verify($this->data, $privateKey, $certificate, $secret);
+            SimplifiedCreditNoteCompliantService::verify($this->data, $privateKey, $certificate, $secret);
+            SimplifiedDebitNoteCompliantService::verify($this->data, $privateKey, $certificate, $secret);
         }
-        else {
 
-            $this->handleComplianceMode($settings);
+        $this->handleProductionMode($settings);
 
-        }
     }
 
     /**
@@ -63,8 +68,6 @@ class Cert509Service
      */
     public function handleProductionMode(object &$settings): void
     {
-        $this->handleComplianceMode($settings);
-
         $this->setCert509('production', $settings);
     }
 

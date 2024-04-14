@@ -55,7 +55,7 @@ class ReportInvoiceService
      */
     public function reporting(): array
     {
-        ConfigHelper::mustAllow('production');
+        // ConfigHelper::mustAllow('production');
 
         $route = '/invoices/reporting/single';
 
@@ -69,7 +69,7 @@ class ReportInvoiceService
      */
     public function clearance(): array
     {
-        ConfigHelper::mustAllow('production');
+        // ConfigHelper::mustAllow('production');
 
         $route = '/invoices/clearance/single';
 
@@ -84,7 +84,7 @@ class ReportInvoiceService
      */
     public function test(string $document_type): array
     {
-        ConfigHelper::mustAllow('local');
+        // ConfigHelper::mustAllow('local');
 
         $route = '/compliance/invoices';
 
