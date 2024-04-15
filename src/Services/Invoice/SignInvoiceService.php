@@ -123,7 +123,15 @@ class SignInvoiceService
 
         $this->certificateOutput = $x509->loadX509($csrX509);
 
-        $this->issuerName        = $x509->getIssuerDN(X509::DN_STRING);
+        // $this->issuerName        = $x509->getIssuerDN(X509::DN_STRING);
+
+        $issuerNameArray = $x509->getIssuerDN(X509::DN_ARRAY)['rdnSequence'];
+        $CN = $issuerNameArray[3][0]['value']['printableString'];
+        $DC1 = $issuerNameArray[2][0]['value']['ia5String'];
+        $DC2 = $issuerNameArray[1][0]['value']['ia5String'];
+        $DC3 = $issuerNameArray[0][0]['value']['ia5String'];
+
+        $this->issuerName = "CN={$CN}, DC={$DC1}, DC={$DC2}, DC={$DC3}";
 
         $this->publicKey         = (new PublicKey)->transform($x509->getPublicKey());
 
@@ -203,8 +211,6 @@ class SignInvoiceService
         $xmlHash = str_replace('SET_CERTIFICATE_HASH', (new InvoiceHelper)->getHashedCertificate($this->seller->certificate), $xmlHash);
 
         $xmlHash = str_replace('SET_CERTIFICATE_ISSUER', $this->issuerName, $xmlHash);
-
-        $issuerSerialNumber = $this->certificateOutput['tbsCertificate']['serialNumber']->toString();
 
         $xmlHash = str_replace('SET_CERTIFICATE_SERIAL_NUMBER', $issuerSerialNumber, $xmlHash);
 
