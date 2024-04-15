@@ -65,9 +65,9 @@ class InvoiceHelper
      */
     public function getHashSignedProperity(string $signed_properties): string
     {
-        $signedProperties = unpack('H*', $signed_properties)['1'];
+        // $signedProperties = unpack('H*', $signed_properties)['1'];
 
-        $signedProperties = hash('sha256', $signedProperties, false);
+        $signedProperties = hash('sha256', $signed_properties, false);
 
         return base64_encode($signedProperties);
     }

@@ -182,6 +182,7 @@ class SignInvoiceService
      */
     protected function getSignedProperties(): array
     {
+        // generate xml ubl signed properties...
         $xml = GetXmlFileAction::handle('xml_ubl_signed_properties');
 
         $xml = str_replace('SET_SIGN_TIMESTAMP', (new InvoiceHelper)->getSigningTime($this->invoice), $xml);
@@ -194,11 +195,24 @@ class SignInvoiceService
 
         $xml = str_replace('SET_CERTIFICATE_SERIAL_NUMBER', $issuerSerialNumber, $xml);
 
+        // generate xml ubl signed properties hash...
+        $xmlHash = GetXmlFileAction::handle('xml_ubl_signed_properties_hash');
+
+        $xmlHash = str_replace('SET_SIGN_TIMESTAMP', (new InvoiceHelper)->getSigningTime($this->invoice), $xmlHash);
+
+        $xmlHash = str_replace('SET_CERTIFICATE_HASH', (new InvoiceHelper)->getHashedCertificate($this->seller->certificate), $xmlHash);
+
+        $xmlHash = str_replace('SET_CERTIFICATE_ISSUER', $this->issuerName, $xmlHash);
+
+        $issuerSerialNumber = $this->certificateOutput['tbsCertificate']['serialNumber']->toString();
+
+        $xmlHash = str_replace('SET_CERTIFICATE_SERIAL_NUMBER', $issuerSerialNumber, $xmlHash);
+
         return [
 
             $xml,
 
-            (new InvoiceHelper)->getHashSignedProperity($xml)
+            (new InvoiceHelper)->getHashSignedProperity($xmlHash)
         ];
     }
 

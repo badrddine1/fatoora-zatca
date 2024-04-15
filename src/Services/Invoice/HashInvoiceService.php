@@ -82,7 +82,8 @@ class HashInvoiceService
 
         $invoice = str_replace('SET_QR_AND_SIGNATURE_FOR_SIGNED', "    \n    ", $invoice);
 
-        $invoiceHash = hash('sha256', $invoice, true);
+        $invoiceHash = hash('sha256', $invoice, false);
+        // $invoiceHash = hash('sha256', $invoice, true);
 
         return base64_encode($invoiceHash);
     }
