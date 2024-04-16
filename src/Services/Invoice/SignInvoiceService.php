@@ -6,7 +6,10 @@ use Bl\FatooraZatca\Actions\GetXmlFileAction;
 use Bl\FatooraZatca\Helpers\InvoiceHelper;
 use Bl\FatooraZatca\Transformers\PriceFormat;
 use Bl\FatooraZatca\Transformers\PublicKey;
+use DOMDocument;
+use DOMXPath;
 use phpseclib3\File\X509;
+use SimpleXMLElement;
 
 class SignInvoiceService
 {
@@ -107,6 +110,41 @@ class SignInvoiceService
             $this->invoiceXml
         );
 
+        ///////////////////////
+        $xml = new DOMDocument("1.0", "utf-8");
+        // $xml->preserveWhiteSpace = false;
+        // $xml->formatOutput = false;
+        // $linearizedXml = preg_replace('/\s+/', '', $doc->saveXML());
+
+        $xml->loadXML($this->invoiceXml); // invoice file after populate the properties;
+        // dd($xml);
+        //use domPath to register this namespace
+        $xpath = new DOMXPath($xml);
+        // register namespace
+        $xpath->registerNamespace('default-ns', "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2");
+        $xpath->registerNamespace('sig', "urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2");
+        $xpath->registerNamespace('sac', "urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2");
+        $xpath->registerNamespace('sbc', "urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2");
+        $xpath->registerNamespace('ds', "http://www.w3.org/2000/09/xmldsig#");
+        $xpath->registerNamespace('xades', "http://uri.etsi.org/01903/v1.3.2#");
+
+        // path of SignedProperties
+        $SignedProperties = "//default-ns:Invoice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/sig:UBLDocumentSignatures/sac:SignatureInformation/ds:Signature/ds:Object/xades:QualifyingProperties/xades:SignedProperties";
+        // get SignedProperties by path query
+        $SignedPropertiesValue = $xpath->query($SignedProperties);
+        // convert SignedProperties node to c14n standerd.
+        $canonicalizationInvoiceXML = $SignedPropertiesValue[0]->C14N(\true);
+        // $canonicalizationInvoiceXML = preg_replace('/\s+/', '', $canonicalizationInvoiceXML);
+
+        dd($canonicalizationInvoiceXML, $this->invoiceXml);
+
+        // $canonicalizationInvoiceXML = str_replace('></ds:DigestMethod>', '/>', $canonicalizationInvoiceXML);
+        // dd(base64_encode(hash('sha256', $canonicalizationInvoiceXML)));
+        $canonicalizationInvoiceXML = base64_encode(hash('sha256', $canonicalizationInvoiceXML));
+        ///////////////////////////////
+        $this->invoiceXml = str_replace('SET_SIGNED_PROPERTIES_HASH', $canonicalizationInvoiceXML, $this->invoiceXml);
+
+
         return base64_encode($this->invoiceXml);
     }
 
@@ -170,15 +208,13 @@ class SignInvoiceService
 
         $xml = str_replace('SET_INVOICE_HASH', $this->invoiceHash, $xml);
 
-        list($signedProperties, $signedPropertiesHash) = $this->getSignedProperties();
-
-        $xml = str_replace('SET_SIGNED_PROPERTIES_HASH', $signedPropertiesHash, $xml);
+        // $xml = str_replace('SET_SIGNED_PROPERTIES_HASH', $this->getSignedPropertiesHash(), $xml);
 
         $xml = str_replace('SET_DIGITAL_SIGNATURE', $this->digitalSignature, $xml);
 
         $xml = str_replace('SET_CERTIFICATE_VALUE', base64_decode($this->seller->certificate), $xml);
 
-        $xml = str_replace('SET_CERTIFICATE_SIGNED_PROPERTIES', $signedProperties, $xml);
+        $xml = str_replace('SET_CERTIFICATE_SIGNED_PROPERTIES', $this->getSignedProperties(), $xml);
 
         return rtrim($xml, "\n");
     }
@@ -186,9 +222,9 @@ class SignInvoiceService
     /**
      * get the signed properties.
      *
-     * @return array
+     * @return string
      */
-    protected function getSignedProperties(): array
+    protected function getSignedProperties(): string
     {
         // generate xml ubl signed properties...
         $xml = GetXmlFileAction::handle('xml_ubl_signed_properties');
@@ -203,23 +239,46 @@ class SignInvoiceService
 
         $xml = str_replace('SET_CERTIFICATE_SERIAL_NUMBER', $issuerSerialNumber, $xml);
 
-        // generate xml ubl signed properties hash...
-        $xmlHash = GetXmlFileAction::handle('xml_ubl_signed_properties_hash');
+        return $xml;
+    }
 
-        $xmlHash = str_replace('SET_SIGN_TIMESTAMP', (new InvoiceHelper)->getSigningTime($this->invoice), $xmlHash);
+    /**
+     * get the signed properties hash.
+     *
+     * @return string
+     */
+    protected function getSignedPropertiesHash(): string
+    {
+        $xml = GetXmlFileAction::handle('xml_ubl_signed_properties_hash');
 
-        $xmlHash = str_replace('SET_CERTIFICATE_HASH', (new InvoiceHelper)->getHashedCertificate($this->seller->certificate), $xmlHash);
+        $xml = str_replace('SET_SIGN_TIMESTAMP', (new InvoiceHelper)->getSigningTime($this->invoice), $xml);
 
-        $xmlHash = str_replace('SET_CERTIFICATE_ISSUER', $this->issuerName, $xmlHash);
+        $xml = str_replace('SET_CERTIFICATE_HASH', (new InvoiceHelper)->getHashedCertificate($this->seller->certificate), $xml);
 
-        $xmlHash = str_replace('SET_CERTIFICATE_SERIAL_NUMBER', $issuerSerialNumber, $xmlHash);
+        $xml = str_replace('SET_CERTIFICATE_ISSUER', $this->issuerName, $xml);
 
-        return [
+        $issuerSerialNumber = $this->certificateOutput['tbsCertificate']['serialNumber']->toString();
 
-            $xml,
+        $xml = str_replace('SET_CERTIFICATE_SERIAL_NUMBER', $issuerSerialNumber, $xml);
 
-            (new InvoiceHelper)->getHashSignedProperity($xmlHash)
-        ];
+        // hash the signed properties...
+        // $signedProperties = unpack('H*', $xml)['1'];
+        // $signedProperties = hash('sha256', $signedProperties);
+
+        $doc = new DOMDocument();
+        $doc->preserveWhiteSpace = false;
+        $doc->formatOutput = false;
+        $doc->loadXML($xml);
+        // $doc->normalize();
+        // $doc->C14N();
+        // dd($doc->saveXML());
+        $linearizedXml = preg_replace('/\s+/', '', $doc->saveXML());
+        $linearizedXml = str_replace('<?xmlversion="1.0"?>', '', $linearizedXml);
+
+        $signedProperties = hash('sha256', $linearizedXml);
+
+        // encode hashed signed properties in base64 format...
+        return base64_encode($signedProperties);
     }
 
     /**

@@ -58,21 +58,6 @@ class InvoiceHelper
     }
 
     /**
-     * get hash signed properity in base64 format.
-     *
-     * @param  string $signedProperties
-     * @return string
-     */
-    public function getHashSignedProperity(string $signedProperties): string
-    {
-        $signedProperties = unpack('H*', $signedProperties)['1'];
-
-        $signedProperties = hash('sha256', $signedProperties, false);
-
-        return base64_encode($signedProperties);
-    }
-
-    /**
      * get the certificate signature from certificate output.
      *
      * @param  mixed $certificate_output
