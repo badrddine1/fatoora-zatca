@@ -134,17 +134,19 @@ class SignInvoiceService
         $SignedPropertiesValue = $xpath->query($SignedProperties);
         // convert SignedProperties node to c14n standerd.
         $canonicalizationInvoiceXML = $SignedPropertiesValue[0]->C14N(\true);
-        $canonicalizationInvoiceXML = '                                ' . $canonicalizationInvoiceXML;
-        // $canonicalizationInvoiceXML = preg_replace('/\s+/', '', $canonicalizationInvoiceXML);
 
-        // dd($canonicalizationInvoiceXML, $this->invoiceXml);
 
-        // $canonicalizationInvoiceXML = str_replace('></ds:DigestMethod>', '/>', $canonicalizationInvoiceXML);
-        // dd(base64_encode(hash('sha256', $canonicalizationInvoiceXML)));
+        // Load XML string
+        $doc = new DOMDocument();
+        $doc->preserveWhiteSpace = true;
+        $doc->loadXML($canonicalizationInvoiceXML);
+
+        // Output linearized XML without spaces
+        $canonicalizationInvoiceXML = $doc->saveXML($doc->documentElement);
+dd($canonicalizationInvoiceXML);
         $canonicalizationInvoiceXML = base64_encode(hash('sha256', $canonicalizationInvoiceXML));
         ///////////////////////////////
         $this->invoiceXml = str_replace('SET_SIGNED_PROPERTIES_HASH', $canonicalizationInvoiceXML, $this->invoiceXml);
-
 
         return base64_encode($this->invoiceXml);
     }
