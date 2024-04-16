@@ -1,4 +1,4 @@
-                                <xades:SignedProperties Id="xadesSignedProperties">
+                                <xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="xadesSignedProperties">
                                     <xades:SignedSignatureProperties>
                                         <xades:SigningTime>SET_SIGN_TIMESTAMP</xades:SigningTime>
                                         <xades:SigningCertificate>
