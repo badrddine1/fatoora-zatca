@@ -2,11 +2,4 @@
                 <cbc:ChargeIndicator>false</cbc:ChargeIndicator>
                 <cbc:AllowanceChargeReason>ITEM_DISCOUNT_REASON</cbc:AllowanceChargeReason>
                 <cbc:Amount currencyID="SET_CURRENCY">ITEM_DISCOUNT_VALUE</cbc:Amount>
-                <cac:TaxCategory>
-                    <cbc:ID>ITEM_VAT_CATEGORY_CODE</cbc:ID>
-                    <cbc:Percent>ITEM_DISCOUNT_PERCENT_VALUE</cbc:Percent>
-                    <cac:TaxScheme>
-                        <cbc:ID>VAT</cbc:ID>
-                    </cac:TaxScheme>
-                </cac:TaxCategory>
             </cac:AllowanceCharge>
