@@ -1,5 +1,5 @@
         <cac:TaxSubtotal>
-            <cbc:TaxableAmount currencyID="SET_CURRENCY">ITEM_SUB_TOTAL</cbc:TaxableAmount>
+            <cbc:TaxableAmount currencyID="SET_CURRENCY">ITEM_TAXABLE_AMOUNT</cbc:TaxableAmount>
             <cbc:TaxAmount currencyID="SET_CURRENCY">ITEM_TOTAL_TAX</cbc:TaxAmount>
             <cac:TaxCategory>
                 <cbc:ID schemeAgencyID="6" schemeID="UN/ECE 5305">S</cbc:ID>
