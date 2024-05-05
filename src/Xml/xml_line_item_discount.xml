@@ -1,8 +1,8 @@
             <cac:AllowanceCharge>
-                <cac:TaxCategory>
-                    <cbc:ID>ITEM_VAT_CATEGORY_CODE</cbc:ID>
-                </cac:TaxCategory>
                 <cbc:ChargeIndicator>false</cbc:ChargeIndicator>
                 <cbc:AllowanceChargeReason>DISCOUNT_REASON</cbc:AllowanceChargeReason>
                 <cbc:Amount currencyID="SET_CURRENCY">DISCOUNT_VALUE</cbc:Amount>
+                <cac:TaxCategory>
+                    <cbc:ID>ITEM_VAT_CATEGORY_CODE</cbc:ID>
+                </cac:TaxCategory>
             </cac:AllowanceCharge>
