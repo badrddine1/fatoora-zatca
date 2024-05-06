@@ -26,59 +26,12 @@ class HandleResponseAction
 
         }
         else {
-            dd($response);
-            if(is_array($response) && array_key_exists('code', $response)) {
-
-                throw new Exception($response['message']);
-
-            }
-            else if(is_array($response) && array_key_exists('errors', $response)) {
-
-                if(is_array($response) && array_key_exists('message', $response['errors'][0])) {
-                    throw new Exception($response['errors'][0]['message']);
-                }
-                else {
-                    throw new Exception($response['errors'][0]);
-                }
-
-            }
-            else if(is_array($response) && array_key_exists('validationResults', $response)) {
-
-                if(count($response['validationResults']['errorMessages']) > 0) {
-
-                    throw new Exception(
-                        implode(
-                            ' --- ',
-                            array_column(
-                                $response['validationResults']['errorMessages'],
-                                'message'
-                            )
-                        )
-                    );
-                }
-
-                if(count($response['validationResults']['warningMessages']) > 0) {
-
-                    throw new Exception(
-                        implode(
-                            ' --- ',
-                            array_column(
-                                $response['validationResults']['warningMessages'],
-                                'message'
-                            )
-                        )
-                    );
-                }
-
-                throw new Exception('Unhandeled validation rules exception!');
-
+            if(! empty($response)) {
+                throw new Exception(json_encode($response));
             }
             else {
-
                 throw new Exception('Unhandeled zatca error exception!');
-
             }
-
         }
     }
 }

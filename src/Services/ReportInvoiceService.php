@@ -55,8 +55,6 @@ class ReportInvoiceService
      */
     public function reporting(): array
     {
-        // ConfigHelper::mustAllow('production');
-
         $route = '/invoices/reporting/single';
 
         return $this->report($route, DocumentType::SIMPILIFIED);
@@ -69,8 +67,6 @@ class ReportInvoiceService
      */
     public function clearance(): array
     {
-        // ConfigHelper::mustAllow('production');
-
         $route = '/invoices/clearance/single';
 
         return $this->report($route, DocumentType::STANDARD);
@@ -84,8 +80,6 @@ class ReportInvoiceService
      */
     public function test(string $document_type): array
     {
-        // ConfigHelper::mustAllow('local');
-
         $route = '/compliance/invoices';
 
         return $this->report($route, $document_type);

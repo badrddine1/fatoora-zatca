@@ -13,9 +13,10 @@ class PostRequestAction
      * @param  array    $data
      * @param  array    $headers
      * @param  string   $USERPWD
+     * @param  string   $method
      * @return array
      */
-    public function handle(string $route, array $data, array $headers, string $USERPWD): array
+    public function handle(string $route, array $data, array $headers, string $USERPWD, string $method = 'POST'): array
     {
         $portal = ConfigHelper::portal();
 
@@ -26,6 +27,9 @@ class PostRequestAction
         if(strlen($USERPWD)) {
             curl_setopt($ch, CURLOPT_USERPWD,  $USERPWD);
         }
+
+        // Set the HTTP request method to PATCH
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
 
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 

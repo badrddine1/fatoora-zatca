@@ -138,9 +138,9 @@ class Cert509Service
     protected function getHeaders(): array
     {
         return [
-            'accept: application/json',
+            'Accept: application/json',
             'Content-Type: application/json',
-            'otp: ' . $this->data->otp,
+            'OTP: ' . $this->data->otp,
             'Accept-Version: V2'
         ];
     }
@@ -169,7 +169,7 @@ class Cert509Service
 
         if($type == 'production') {
 
-            $USERPWD = $settings->cert_compliance. ":" . $settings->secret_compliance;
+            $USERPWD = $settings->cert_compliance . ":" . $settings->secret_compliance;
 
         }
 

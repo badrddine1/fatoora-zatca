@@ -146,6 +146,7 @@ class XmlInvoiceItemsService
     {
         $invoiceLineXml = '';
 
+        //dd($this->invoiceItems);
         foreach($this->invoiceItems as $index => $item) {
 
             $xml = GetXmlFileAction::handle('xml_line_item');

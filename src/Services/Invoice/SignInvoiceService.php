@@ -3,13 +3,12 @@
 namespace Bl\FatooraZatca\Services\Invoice;
 
 use Bl\FatooraZatca\Actions\GetXmlFileAction;
+use Bl\FatooraZatca\Helpers\ConfigHelper;
 use Bl\FatooraZatca\Helpers\InvoiceHelper;
 use Bl\FatooraZatca\Transformers\PriceFormat;
 use Bl\FatooraZatca\Transformers\PublicKey;
-use DOMDocument;
-use DOMXPath;
 use phpseclib3\File\X509;
-use SimpleXMLElement;
+use DOMDocument;
 
 class SignInvoiceService
 {
@@ -110,44 +109,6 @@ class SignInvoiceService
             $this->invoiceXml
         );
 
-        ///////////////////////
-        $xml = new DOMDocument("1.0", "utf-8");
-        // $xml->preserveWhiteSpace = false;
-        // $xml->formatOutput = false;
-        // $linearizedXml = preg_replace('/\s+/', '', $doc->saveXML());
-
-        $xml->loadXML($this->invoiceXml); // invoice file after populate the properties;
-        // dd($xml);
-        //use domPath to register this namespace
-        $xpath = new DOMXPath($xml);
-        // register namespace
-        $xpath->registerNamespace('default-ns', "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2");
-        $xpath->registerNamespace('sig', "urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2");
-        $xpath->registerNamespace('sac', "urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2");
-        $xpath->registerNamespace('sbc', "urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2");
-        $xpath->registerNamespace('ds', "http://www.w3.org/2000/09/xmldsig#");
-        $xpath->registerNamespace('xades', "http://uri.etsi.org/01903/v1.3.2#");
-
-        // path of SignedProperties
-        $SignedProperties = "//default-ns:Invoice/ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/sig:UBLDocumentSignatures/sac:SignatureInformation/ds:Signature/ds:Object/xades:QualifyingProperties/xades:SignedProperties";
-        // get SignedProperties by path query
-        $SignedPropertiesValue = $xpath->query($SignedProperties);
-        // convert SignedProperties node to c14n standerd.
-        $canonicalizationInvoiceXML = $SignedPropertiesValue[0]->C14N(\true);
-
-
-        // Load XML string
-        $doc = new DOMDocument();
-        $doc->preserveWhiteSpace = true;
-        $doc->loadXML($canonicalizationInvoiceXML);
-
-        // Output linearized XML without spaces
-        $canonicalizationInvoiceXML = $doc->saveXML($doc->documentElement);
-dd($canonicalizationInvoiceXML);
-        $canonicalizationInvoiceXML = base64_encode(hash('sha256', $canonicalizationInvoiceXML));
-        ///////////////////////////////
-        $this->invoiceXml = str_replace('SET_SIGNED_PROPERTIES_HASH', $canonicalizationInvoiceXML, $this->invoiceXml);
-
         return base64_encode($this->invoiceXml);
     }
 
@@ -164,15 +125,18 @@ dd($canonicalizationInvoiceXML);
 
         $this->certificateOutput = $x509->loadX509($csrX509);
 
-        // $this->issuerName        = $x509->getIssuerDN(X509::DN_STRING);
-
         $issuerNameArray = $x509->getIssuerDN(X509::DN_ARRAY)['rdnSequence'];
-        $CN = $issuerNameArray[3][0]['value']['printableString'];
-        $DC1 = $issuerNameArray[2][0]['value']['ia5String'];
-        $DC2 = $issuerNameArray[1][0]['value']['ia5String'];
-        $DC3 = $issuerNameArray[0][0]['value']['ia5String'];
 
-        $this->issuerName = "CN={$CN}, DC={$DC1}, DC={$DC2}, DC={$DC3}";
+        if(count($issuerNameArray) === 4) {
+            $CN = $issuerNameArray[3][0]['value']['printableString'];
+            $DC1 = $issuerNameArray[2][0]['value']['ia5String'];
+            $DC2 = $issuerNameArray[1][0]['value']['ia5String'];
+            $DC3 = $issuerNameArray[0][0]['value']['ia5String'];
+            $this->issuerName = "CN={$CN}, DC={$DC1}, DC={$DC2}, DC={$DC3}";
+        }
+        else {
+            $this->issuerName = $x509->getIssuerDN(X509::DN_STRING);
+        }
 
         $this->publicKey         = (new PublicKey)->transform($x509->getPublicKey());
 
@@ -211,7 +175,7 @@ dd($canonicalizationInvoiceXML);
 
         $xml = str_replace('SET_INVOICE_HASH', $this->invoiceHash, $xml);
 
-        // $xml = str_replace('SET_SIGNED_PROPERTIES_HASH', $this->getSignedPropertiesHash(), $xml);
+        $xml = str_replace('SET_SIGNED_PROPERTIES_HASH', $this->getSignedPropertiesHash(), $xml);
 
         $xml = str_replace('SET_DIGITAL_SIGNATURE', $this->digitalSignature, $xml);
 
@@ -241,7 +205,7 @@ dd($canonicalizationInvoiceXML);
         $issuerSerialNumber = $this->certificateOutput['tbsCertificate']['serialNumber']->toString();
 
         $xml = str_replace('SET_CERTIFICATE_SERIAL_NUMBER', $issuerSerialNumber, $xml);
-        // dd($xml);
+
         return $xml;
     }
 
@@ -269,21 +233,11 @@ dd($canonicalizationInvoiceXML);
         // $signedProperties = hash('sha256', $signedProperties);
 
         $doc = new DOMDocument();
-        // $doc->preserveWhiteSpace = false;
-        // $doc->formatOutput = true;
+        $doc->preserveWhiteSpace = true;
         $doc->loadXML($xml);
-        // $doc->normalize();
-        // $doc->C14N();
-        // // dd($doc->saveXML());
-        // $xml = preg_replace('/\s+/', '', $doc->saveXML());
-        /*
-        $xml = str_replace('<?xmlversion="1.0"?>', '', $xml);
-        */
-// dd($xml);
-        $signedProperties = hash('sha256', $xml);
+        $xml = $doc->saveXML($doc->documentElement);
 
-        // encode hashed signed properties in base64 format...
-        return base64_encode($signedProperties);
+        return base64_encode(hash('sha256', $xml));
     }
 
     /**
